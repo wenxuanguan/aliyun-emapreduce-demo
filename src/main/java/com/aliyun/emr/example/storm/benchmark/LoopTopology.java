@@ -16,7 +16,7 @@ import org.apache.storm.tuple.Values;
 import java.util.Arrays;
 import java.util.Properties;
 
-public class BasicTopology extends AbstractTopology {
+public class LoopTopology extends AbstractTopology {
 
     @Override
     StormTopology createTopology() {
@@ -85,14 +85,14 @@ public class BasicTopology extends AbstractTopology {
             .withTupleToKafkaMapper(new TupleToKafkaMapper<String, String>() {
                 @Override
                 public String getKeyFromTuple(Tuple tuple) {
-                    return null;
+                    //ImmutableMap<String, String> kv = (ImmutableMap<String, String>)tuple.getValue(0);
+                    return "" + System.currentTimeMillis();
                 }
 
                 @Override
                 public String getMessageFromTuple(Tuple tuple) {
                     ImmutableMap<String, String> kv = (ImmutableMap<String, String>)tuple.getValue(0);
-                    return kv.keySet().iterator().next() + "," + System.currentTimeMillis();
-
+                    return  kv.values().iterator().next();
                 }
             });
         bolt.setFireAndForget(true);
@@ -101,7 +101,7 @@ public class BasicTopology extends AbstractTopology {
     }
 
     public static void main(String[] args) throws Exception {
-        BasicTopology basicTopology = new BasicTopology();
+        LoopTopology basicTopology = new LoopTopology();
         if (args.length > 1) {
             if (!"--property".equals(args[1])) {
                 System.out.println("unknow option: " + args[1]);

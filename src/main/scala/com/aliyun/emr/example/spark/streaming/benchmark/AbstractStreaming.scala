@@ -16,9 +16,10 @@ abstract class AbstractStreaming {
 
   def runJob(args: Array[String]): Unit = {
     config = loadConfig(args(0))
-    val receiverCores = config.getProperty("partition.number").toInt / config.getProperty("kafka.partition.receiver.factor").toInt
-    val executorCore = (config.getProperty("cluster.cores.total").toInt * config.getProperty("cpu.core.factor").toFloat - receiverCores).toInt/config.getProperty("spark.executor.instances").toInt
+    val executorCore = (config.getProperty("cluster.cores.total").toInt * config.getProperty("cpu.core.factor").toFloat).toInt/config.getProperty("spark.executor.instances").toInt
     val executorMem = config.getProperty("cluster.memory.per.node.mb").toInt * config.getProperty("cluster.worker.node.number").toInt / config.getProperty("spark.executor.instances").toInt
+    val walEnable = config.getProperty("receiver.writeAheadLog.enable").toBoolean
+
     val sparkConf = new SparkConf()
       .setAppName(config.getProperty("name"))
       .set("spark.yarn.am.memory.mb", config.getProperty("spark.yarn.am.memory.mb") + "m")
@@ -27,7 +28,11 @@ abstract class AbstractStreaming {
       .set("spark.executor.cores", executorCore.toString)
       .set("spark.executor.memory", executorMem + "m")
       .set("spark.streaming.blockInterval", config.getProperty("spark.streaming.blockInterval"))
+      .set("receiver.writeAheadLog.enable", config.getProperty("receiver.writeAheadLog.enable"))
     val ssc = new StreamingContext(new SparkContext(sparkConf), Duration(config.getProperty("duration.ms").toLong))
+    if (walEnable) {
+      ssc.checkpoint(".")
+    }
 
     val kafkaParam = Map[String, Object](
       "bootstrap.servers" -> config.getProperty("broker.list"),
