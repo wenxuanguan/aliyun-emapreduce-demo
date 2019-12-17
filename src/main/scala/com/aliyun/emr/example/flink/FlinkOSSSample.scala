@@ -17,10 +17,8 @@
 
 package com.aliyun.emr.example.flink
 
-import org.apache.flink.api.java.ExecutionEnvironment
 import org.apache.flink.api.java.utils.ParameterTool
-
-import scala.collection.JavaConversions._
+import org.apache.flink.api.scala._
 
 object FlinkOSSSample {
   def main(args: Array[String]) {
